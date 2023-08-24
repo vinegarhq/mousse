@@ -57,7 +57,7 @@ func main() {
 	defer s.Close()
 
 	// first run
-	cvs, err := ChannelsLatestVersions("WindowsPlayer")
+	bcvs, err := BinariesChannelsLatestVersions()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -65,7 +65,7 @@ func main() {
 	for {
 		time.Sleep(2 * time.Minute)
 
-		cvs.Check("WindowsPlayer", func(vd *VersionDiff) error {
+		bcvs.Check(func(vd *VersionDiff) error {
 			return s.SendVersionDiff(discord.ChannelID(channelID), vd)
 		})
 	}

@@ -9,8 +9,6 @@ import (
 	"github.com/vinegarhq/vinegar/util"
 )
 
-// pls help i dont know how to name things
-
 const VersionCheckURL = "https://clientsettingscdn.roblox.com/v2/client-version"
 
 type Version struct {
@@ -20,14 +18,14 @@ type Version struct {
 
 type (
 	ChannelsVersions         map[string]Version
-	BinariesChannelsVersions map[string]map[string]Version
+	BinariesChannelsVersions map[string]ChannelsVersions
 )
 
 func LatestVersion(binary string, channel string) (Version, error) {
 	var ver Version
 	url := VersionCheckURL + "/" + binary + "/channel/" + channel
 
-	log.Println(url)
+	log.Printf("Fetching %s for channel %s (%s)", binary, channel, url)
 
 	resp, err := util.Body(url)
 	if err != nil {
@@ -49,6 +47,8 @@ func LatestVersion(binary string, channel string) (Version, error) {
 func ChannelsLatestVersions(binary string) (ChannelsVersions, error) {
 	cvs := make(ChannelsVersions, 0)
 
+	log.Printf("Fetching all latest versions for binary %s", binary)
+
 	for _, c := range Channels {
 		v, err := LatestVersion(binary, c)
 		if err != nil {
@@ -63,6 +63,8 @@ func ChannelsLatestVersions(binary string) (ChannelsVersions, error) {
 
 func BinariesChannelsLatestVersions() (BinariesChannelsVersions, error) {
 	bcvs := make(BinariesChannelsVersions, 0)
+
+	log.Println("Fetching all latest versions for all binaries")
 
 	for _, b := range Binaries {
 		bcv, err := ChannelsLatestVersions(b)

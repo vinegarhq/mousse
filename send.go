@@ -7,7 +7,7 @@ import (
 )
 
 func (s *State) SendVersionDiff(channelID discord.ChannelID, vd *VersionDiff) error {
-	log.Printf("Sending client version diff: %s %s", vd.Old.Upload, vd.New.Upload)
+	log.Printf("Sending version embed diff: %s %s", vd.Old.Upload, vd.New.Upload)
 
 	embed := vd.Embed()
 

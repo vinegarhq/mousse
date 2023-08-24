@@ -11,7 +11,18 @@ type VersionDiff struct {
 	New     *Version
 }
 
+func (bcvs *BinariesChannelsVersions) Check(onMismatch func(*VersionDiff) error) {
+	log.Printf("Checking for updates of all binaries")
+
+	for _, b := range Binaries {
+		bcv := (*bcvs)[b]
+		bcv.Check(b, onMismatch)
+	}
+}
+
 func (cvs *ChannelsVersions) Check(binary string, onMismatch func(*VersionDiff) error) {
+	log.Printf("Checking for updates of %s", binary)
+
 	for _, c := range Channels {
 		cv := (*cvs)[c]
 		ver, err := LatestVersion(binary, c)
