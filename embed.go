@@ -9,7 +9,7 @@ import (
 func EmbedClientVersionDiff(cvd *ClientVersionDiff) *discord.Embed {
 	embed := discord.NewEmbed()
 
-	embed.Title = fmt.Sprintf("WindowsPlayer@%s", cvd.Channel.String())
+	embed.Title = fmt.Sprintf("WindowsPlayer@%s", cvd.Channel)
 	embed.Description = fmt.Sprintf(
 		"```diff\n- %s (%s)\n+ %s (%s)\n```\n",
 		cvd.Old.ClientVersionUpload, cvd.Old.Version,

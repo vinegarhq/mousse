@@ -20,17 +20,17 @@ type ClientVersion struct {
 }
 
 type ClientVersionDiff struct {
-	Channel
+	Channel string
 	Old *ClientVersion
 	New *ClientVersion
 }
 
-type ChannelsClientVersions map[Channel]ClientVersion
+type ChannelsClientVersions map[string]ClientVersion
 
-func LatestVersion(channel Channel) (ClientVersion, error) {
+func LatestVersion(channel string) (ClientVersion, error) {
 	var cv ClientVersion
 
-	url := VersionCheckURL + "/WindowsPlayer/channel/" + channel.String()
+	url := VersionCheckURL + "/WindowsPlayer/channel/" + channel
 
 	log.Println(url)
 
