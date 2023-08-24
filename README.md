@@ -1,3 +1,3 @@
 # mousse
 
-Discord bot to track a few hand-picked Roblox release channels for all available Roblox binaries.
+Discord bot that periodically polls for updates on selected Roblox internal deployment channels
