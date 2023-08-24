@@ -9,59 +9,69 @@ import (
 	"github.com/vinegarhq/vinegar/util"
 )
 
+// pls help i dont know how to name things
+
 const VersionCheckURL = "https://clientsettingscdn.roblox.com/v2/client-version"
 
-type ClientVersion struct {
-	Version                 string `json:"version"`
-	ClientVersionUpload     string `json:"clientVersionUpload"`
-	BootstrapperVersion     string `json:"bootstrapperVersion"`
-	NextClientVersionUpload string `json:"nextClientVersionUpload,omitempty"`
-	NextClientVersion       string `json:"nextClientVersion,omitempty"`
+type Version struct {
+	Version string `json:"version"`
+	Upload  string `json:"clientVersionUpload"`
 }
 
-type ClientVersionDiff struct {
-	Channel string
-	Old *ClientVersion
-	New *ClientVersion
-}
+type (
+	ChannelsVersions         map[string]Version
+	BinariesChannelsVersions map[string]map[string]Version
+)
 
-type ChannelsClientVersions map[string]ClientVersion
-
-func LatestVersion(channel string) (ClientVersion, error) {
-	var cv ClientVersion
-
-	url := VersionCheckURL + "/WindowsPlayer/channel/" + channel
+func LatestVersion(binary string, channel string) (Version, error) {
+	var ver Version
+	url := VersionCheckURL + "/" + binary + "/channel/" + channel
 
 	log.Println(url)
 
 	resp, err := util.Body(url)
 	if err != nil {
-		return ClientVersion{}, fmt.Errorf("failed to fetch version: %w", err)
+		return Version{}, fmt.Errorf("failed to fetch version: %w", err)
 	}
 
-	err = json.Unmarshal([]byte(resp), &cv)
+	err = json.Unmarshal([]byte(resp), &ver)
 	if err != nil {
-		return ClientVersion{}, fmt.Errorf("failed to unmarshal clientsettings: %w", err)
+		return Version{}, fmt.Errorf("failed to unmarshal clientsettings: %w", err)
 	}
 
-	if cv.ClientVersionUpload == "" {
-		return ClientVersion{}, errors.New("no version found")
+	if ver.Upload == "" {
+		return Version{}, errors.New("no version found")
 	}
 
-	return cv, nil
+	return ver, nil
 }
 
-func AllLatestVersions() (ChannelsClientVersions, error) {
-	ccvs := make(ChannelsClientVersions, 0)
+func ChannelsLatestVersions(binary string) (ChannelsVersions, error) {
+	cvs := make(ChannelsVersions, 0)
 
 	for _, c := range Channels {
-		cv, err := LatestVersion(c)
+		v, err := LatestVersion(binary, c)
 		if err != nil {
-			return ChannelsClientVersions{}, err
+			return ChannelsVersions{}, err
 		}
 
-		ccvs[c] = cv
+		cvs[c] = v
 	}
 
-	return ccvs, nil
+	return cvs, nil
+}
+
+func BinariesChannelsLatestVersions() (BinariesChannelsVersions, error) {
+	bcvs := make(BinariesChannelsVersions, 0)
+
+	for _, b := range Binaries {
+		bcv, err := ChannelsLatestVersions(b)
+		if err != nil {
+			return BinariesChannelsVersions{}, err
+		}
+
+		bcvs[b] = bcv
+	}
+
+	return bcvs, nil
 }

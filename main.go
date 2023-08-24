@@ -16,6 +16,22 @@ var (
 	channelID int64
 )
 
+var Binaries = []string{
+	"WindowsPlayer",
+	"WindowsStudio",
+	"WindowsStudio64",
+	"MacPlayer",
+	"MacStudio",
+}
+
+var Channels = []string{
+	"LIVE",
+	"ZIntegration",
+	"ZCanary",
+	"ZFlag",
+	"ZNext",
+}
+
 type State struct {
 	*state.State
 }
@@ -41,7 +57,7 @@ func main() {
 	defer s.Close()
 
 	// first run
-	ccvs, err := AllLatestVersions()
+	cvs, err := ChannelsLatestVersions("WindowsPlayer")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -49,32 +65,8 @@ func main() {
 	for {
 		time.Sleep(2 * time.Minute)
 
-		for _, c := range Channels {
-			ccv := ccvs[c]
-			cv, err := LatestVersion(c)
-			if err != nil {
-				log.Println(err)
-
-				continue
-			}
-
-			if cv.ClientVersionUpload == ccv.ClientVersionUpload {
-				continue
-			}
-
-			log.Println("Mismatch (%s): %s %s", c, cv.ClientVersionUpload, ccv.ClientVersionUpload)
-
-			err = s.SendClientVersionDiff(discord.ChannelID(channelID), &ClientVersionDiff{
-				Channel: c,
-				New:     &cv,
-				Old:     &ccv,
-			})
-			if err != nil {
-				log.Println(err)
-				continue
-			}
-
-			ccvs[c] = cv
-		}
+		cvs.Check("WindowsPlayer", func(vd *VersionDiff) error {
+			return s.SendVersionDiff(discord.ChannelID(channelID), vd)
+		})
 	}
 }
