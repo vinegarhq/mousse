@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -9,12 +10,17 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bwmarrin/discordgo"
+	"github.com/diamondburned/arikawa/v3/api"
+	"github.com/diamondburned/arikawa/v3/api/cmdroute"
+	"github.com/diamondburned/arikawa/v3/gateway"
+	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/diamondburned/arikawa/v3/state"
+	"github.com/diamondburned/arikawa/v3/utils/json/option"
 )
 
 var (
 	token     string
-	channelID string
+	channelID int64
 )
 
 var Binaries = []BinaryType{
@@ -33,25 +39,47 @@ var Channels = []string{
 	"ZNext",
 }
 
+var commands = []api.CreateCommandData{{
+	Name: "status",
+	Description: "Display current tracking channels and binaries",
+}}
+
 func init() {
 	flag.StringVar(&token, "token", "", "Discord Bot Token")
-	flag.StringVar(&channelID, "channel", "1143583777831010394", "Channel ID")
+	flag.Int64Var(&channelID, "channel", 0, "Channel ID")
 }
 
 func main() {
 	flag.Parse()
 	log.Println("Starting Mousse")
 
-	dg, err := discordgo.New("Bot " + token)
-	if err != nil {
-		log.Fatal(err)
+	r := cmdroute.NewRouter()
+	r.AddFunc("status", func(_ context.Context, _ cmdroute.CommandData) *api.InteractionResponseData {
+		return &api.InteractionResponseData{Content: option.NewNullableString(
+			fmt.Sprintf("Tracking binaries `%s` with channels `%s`", Binaries, Channels),
+		)}
+	})
+
+	s := state.New("Bot " + token)
+	s.AddInteractionHandler(r)
+	s.AddIntents(gateway.IntentGuilds)
+	
+	if err := cmdroute.OverwriteCommands(s, commands); err != nil {
+		log.Fatalln("cannot update commands:", err)
 	}
 
-	dg.LogLevel = 1
-	dg.Identify.Intents = discordgo.IntentsGuilds
+	if err := s.Open(context.Background()); err != nil {
+		log.Println("cannot open:", err)
+	}
 
-	if err := dg.Open(); err != nil {
-		log.Fatal(err)
+	err := s.Gateway().Send(context.TODO(), &gateway.UpdatePresenceCommand{
+		Activities: []discord.Activity{{
+			Name: "Roblox's binaries",
+			Type: discord.WatchingActivity,
+		}},
+	})
+	if err != nil {
+		log.Printf("cannot update activity:", err)
 	}
 
 	log.Println("Mousse is now running. Send TERM/INT to exit.")
@@ -59,15 +87,9 @@ func main() {
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	go func() {
 		<-sc
-		dg.Close()
+		s.Close()
 		os.Exit(0)
 	}()
-
-	err = dg.UpdateWatchStatus(0, "Roblox's binaries")
-	if err != nil {
-		dg.Close()
-		log.Fatal(err)
-	}
 
 	// first run
 	bcvs := make(BinariesChannelsVersions, 0)
@@ -81,7 +103,7 @@ func main() {
 		bcvs.Check(func(vd *VersionDiff) error {
 			log.Printf("Sending version embed diff: %s %s", vd.Old.GUID, vd.New.GUID)
 
-			if _, err := dg.ChannelMessageSendEmbed(channelID, vd.Embed()); err != nil {
+			if _, err := s.SendEmbeds(discord.ChannelID(channelID), *vd.Embed()); err != nil {
 				return err
 			}
 
@@ -90,20 +112,20 @@ func main() {
 	}
 }
 
-func (vd *VersionDiff) Embed() *discordgo.MessageEmbed {
-	col := 0xAFC147
+func (vd *VersionDiff) Embed() *discord.Embed {
+	embed := discord.NewEmbed()
 
+	embed.Title = fmt.Sprintf("%s@%s", vd.Binary, vd.Channel)
+	embed.Description = fmt.Sprintf(
+		"```diff\n- %s (%s)\n+ %s (%s)\n```\n",
+		vd.Old.Real, vd.Old.GUID,
+		vd.New.Real, vd.New.GUID,
+	)
+
+	embed.Color = 0xAFC147
 	if vd.Channel == "LIVE" {
-		col = 0xCC241D
+		embed.Color = 0xCC241D
 	}
 
-	return &discordgo.MessageEmbed{
-		Title: fmt.Sprintf("%s@%s", vd.Binary, vd.Channel),
-		Description: fmt.Sprintf(
-			"```diff\n- %s (%s)\n+ %s (%s)\n```\n",
-			vd.Old.Real, vd.Old.GUID,
-			vd.New.Real, vd.New.GUID,
-		),
-		Color: col,
-	}
+	return embed
 }
