@@ -91,6 +91,12 @@ func main() {
 }
 
 func (vd *VersionDiff) Embed() *discordgo.MessageEmbed {
+	col := 0xAFC147
+
+	if vd.Channel == "LIVE" {
+		col = 0xCC241D
+	}
+
 	return &discordgo.MessageEmbed{
 		Title: fmt.Sprintf("%s@%s", vd.Binary, vd.Channel),
 		Description: fmt.Sprintf(
@@ -98,6 +104,6 @@ func (vd *VersionDiff) Embed() *discordgo.MessageEmbed {
 			vd.Old.Real, vd.Old.GUID,
 			vd.New.Real, vd.New.GUID,
 		),
-		Color: 0xAFC147,
+		Color: col,
 	}
 }
