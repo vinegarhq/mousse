@@ -1,27 +1,25 @@
 package main
 
 import (
-	"context"
 	"flag"
+	"fmt"
 	"log"
 	"time"
 
-	"github.com/diamondburned/arikawa/v3/discord"
-	"github.com/diamondburned/arikawa/v3/gateway"
-	"github.com/diamondburned/arikawa/v3/state"
+	"github.com/bwmarrin/discordgo"
 )
 
 var (
 	token     string
-	channelID int64
+	channelID string
 )
 
-var Binaries = []string{
-	"WindowsPlayer",
-	"WindowsStudio",
-	"WindowsStudio64",
-	"MacPlayer",
-	"MacStudio",
+var Binaries = []BinaryType{
+	WindowsPlayer,
+	WindowsStudio,
+	WindowsStudio64,
+	MacPlayer,
+	MacStudio,
 }
 
 var Channels = []string{
@@ -32,41 +30,56 @@ var Channels = []string{
 	"ZNext",
 }
 
-type State struct {
-	*state.State
-}
-
 func init() {
 	flag.StringVar(&token, "token", "", "Discord Bot Token")
-	flag.Int64Var(&channelID, "channel", 0, "Channel ID")
+	flag.StringVar(&channelID, "channel", "1143583777831010394", "Channel ID")
 }
 
 func main() {
 	flag.Parse()
-	log.Println("Starting RDCW")
+	log.Println("Starting Mousse")
 
-	s := &State{
-		State: state.New("Bot " + token),
-	}
-
-	s.AddIntents(gateway.IntentGuilds)
-
-	if err := s.Open(context.TODO()); err != nil {
-		log.Fatal(err)
-	}
-	defer s.Close()
-
-	// first run
-	bcvs, err := BinariesChannelsLatestVersions()
+	dg, err := discordgo.New("Bot " + token)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	dg.Identify.Intents = discordgo.IntentsGuilds
+
+	if err := dg.Open(); err != nil {
+		log.Fatal(err)
+	}
+	defer dg.Close()
+
+	// first run
+	bcvs := make(BinariesChannelsVersions, 0)
+	bcvs.Check(func(vd *VersionDiff) error {
+		return nil
+	})
 
 	for {
 		time.Sleep(2 * time.Minute)
 
 		bcvs.Check(func(vd *VersionDiff) error {
-			return s.SendVersionDiff(discord.ChannelID(channelID), vd)
+			log.Printf("Sending version embed diff: %s %s", vd.Old.GUID, vd.New.GUID)
+
+			if _, err := dg.ChannelMessageSendEmbed(channelID, vd.Embed()); err != nil {
+				return err
+			}
+
+			return nil
 		})
+	}
+}
+
+func (vd *VersionDiff) Embed() *discordgo.MessageEmbed {
+	return &discordgo.MessageEmbed{
+		Title: fmt.Sprintf("%s@%s", vd.Binary, vd.Channel),
+		Description: fmt.Sprintf(
+			"```diff\n- %s (%s)\n+ %s (%s)\n```\n",
+			vd.Old.Real, vd.Old.GUID,
+			vd.New.Real, vd.New.GUID,
+		),
+		Color: 0xAFC147,
 	}
 }

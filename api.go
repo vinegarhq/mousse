@@ -1,79 +1,60 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
-	"fmt"
 	"log"
 
-	"github.com/vinegarhq/vinegar/util"
+	"github.com/vinegarhq/vinegar/roblox/api"
 )
 
-const VersionCheckURL = "https://clientsettingscdn.roblox.com/v2/client-version"
+type BinaryType int
+
+const (
+	WindowsPlayer BinaryType = iota
+	WindowsStudio
+	WindowsStudio64
+	MacPlayer
+	MacStudio
+)
+
+func (bt BinaryType) BinaryName() string {
+	switch bt {
+	case WindowsPlayer:
+		return "WindowsPlayer"
+	case WindowsStudio:
+		return "WindowsStudio"
+	case WindowsStudio64:
+		return "WindowsStudio64"
+	case MacPlayer:
+		return "MacPlayer"
+	case MacStudio:
+		return "MacStudio"
+	default:
+		return "unknown"
+	}
+}
+
+func (bt BinaryType) String() string {
+	return bt.BinaryName()
+}
 
 type Version struct {
-	Version string `json:"version"`
-	Upload  string `json:"clientVersionUpload"`
+	GUID string
+	Real string
 }
 
-type (
-	ChannelsVersions         map[string]Version
-	BinariesChannelsVersions map[string]ChannelsVersions
-)
+func (bt BinaryType) Version(channel string) (Version, error) {
+	var cv api.ClientVersion
 
-func LatestVersion(binary string, channel string) (Version, error) {
-	var ver Version
-	url := VersionCheckURL + "/" + binary + "/channel/" + channel
-
-	log.Printf("Fetching %s for channel %s (%s)", binary, channel, url)
-
-	resp, err := util.Body(url)
+	ep := "v2/client-version/" + bt.String() + "/channel/" + channel
+	err := api.Request("GET", "clientsettings", ep, &cv)
 	if err != nil {
-		return Version{}, fmt.Errorf("failed to fetch version: %w", err)
+		return Version{}, err
 	}
 
-	err = json.Unmarshal([]byte(resp), &ver)
-	if err != nil {
-		return Version{}, fmt.Errorf("failed to unmarshal clientsettings: %w", err)
-	}
+	log.Printf("Got %s version %s for channel %s", bt, cv.ClientVersionUpload, channel)
 
-	if ver.Upload == "" {
-		return Version{}, errors.New("no version found")
-	}
-
-	return ver, nil
-}
-
-func ChannelsLatestVersions(binary string) (ChannelsVersions, error) {
-	cvs := make(ChannelsVersions, 0)
-
-	log.Printf("Fetching all latest versions for binary %s", binary)
-
-	for _, c := range Channels {
-		v, err := LatestVersion(binary, c)
-		if err != nil {
-			return ChannelsVersions{}, err
-		}
-
-		cvs[c] = v
-	}
-
-	return cvs, nil
-}
-
-func BinariesChannelsLatestVersions() (BinariesChannelsVersions, error) {
-	bcvs := make(BinariesChannelsVersions, 0)
-
-	log.Println("Fetching all latest versions for all binaries")
-
-	for _, b := range Binaries {
-		bcv, err := ChannelsLatestVersions(b)
-		if err != nil {
-			return BinariesChannelsVersions{}, err
-		}
-
-		bcvs[b] = bcv
-	}
-
-	return bcvs, nil
+	return Version{
+		GUID: cv.ClientVersionUpload,
+		Real: cv.Version,
+	}, nil
 }
