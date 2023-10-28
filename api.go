@@ -1,8 +1,6 @@
 package main
 
 import (
-	"log"
-
 	"github.com/vinegarhq/vinegar/roblox/api"
 )
 
@@ -50,8 +48,6 @@ func (bt BinaryType) Version(channel string) (Version, error) {
 	if err != nil {
 		return Version{}, err
 	}
-
-	log.Printf("Got %s version %s for channel %s", bt, cv.ClientVersionUpload, channel)
 
 	return Version{
 		GUID: cv.ClientVersionUpload,

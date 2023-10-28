@@ -4,6 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -44,12 +47,27 @@ func main() {
 		log.Fatal(err)
 	}
 
+	dg.LogLevel = 1
 	dg.Identify.Intents = discordgo.IntentsGuilds
 
 	if err := dg.Open(); err != nil {
 		log.Fatal(err)
 	}
-	defer dg.Close()
+
+	log.Println("Mousse is now running. Send TERM/INT to exit.")
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+	go func() {
+		<-sc
+		dg.Close()
+		os.Exit(0)
+	}()
+
+	err = dg.UpdateWatchStatus(0, "Roblox's binaries")
+	if err != nil {
+		dg.Close()
+		log.Fatal(err)
+	}
 
 	// first run
 	bcvs := make(BinariesChannelsVersions, 0)
