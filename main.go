@@ -69,7 +69,7 @@ func main() {
 	}
 
 	if err := s.Open(context.Background()); err != nil {
-		log.Println("cannot open:", err)
+		log.Fatalln("cannot open:", err)
 	}
 
 	err := s.Gateway().Send(context.TODO(), &gateway.UpdatePresenceCommand{
