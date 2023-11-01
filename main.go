@@ -33,10 +33,15 @@ var Binaries = []BinaryType{
 
 var Channels = []string{
 	"LIVE",
-	"ZIntegration",
-	"ZCanary",
+	"ZAvatarRelease",
+	"ZAvatarTeam",
+	"ZAvatarTeam2",
 	"ZFlag",
+	"ZCanaryApps",
+	"ZLive3",
 	"ZNext",
+	"ZStudioInt1",
+	"ZStudioInt2",
 }
 
 var commands = []api.CreateCommandData{{
