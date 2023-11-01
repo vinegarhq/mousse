@@ -18,20 +18,28 @@ type VersionDiff struct {
 
 type VersionDiffMismatchFunc func(*VersionDiff) error
 
-func (bcvs *BinariesChannelsVersions) Check(fn VersionDiffMismatchFunc) {
-	log.Printf("Checking for version changes of all binaries")
+func NewBinariesChannelsVersions() BinariesChannelsVersions {
+	bcvs := make(BinariesChannelsVersions)
 
 	for _, b := range Binaries {
-		bcv := (*bcvs)[b]
-		bcv.Check(b, fn)
+		bcvs[b] = make(ChannelsVersions)
+	}
+
+	return bcvs
+}
+
+func (bcvs BinariesChannelsVersions) Check(fn VersionDiffMismatchFunc) {
+	for _, b := range Binaries {
+		bcvs[b].Check(b, fn)
 	}
 }
 
-func (cvs *ChannelsVersions) Check(bt BinaryType, fn VersionDiffMismatchFunc) {
+func (cvs ChannelsVersions) Check(bt BinaryType, fn VersionDiffMismatchFunc) {
 	log.Printf("Checking for version changes for %s for all channels", bt)
 
 	for _, c := range Channels {
-		cv := (*cvs)[c]
+		cv := cvs[c]
+
 		ver, err := bt.Version(c)
 		if err != nil {
 			log.Printf("%s: channel %s: %s", bt, c, err)
@@ -39,7 +47,7 @@ func (cvs *ChannelsVersions) Check(bt BinaryType, fn VersionDiffMismatchFunc) {
 			continue
 		}
 
-		if ver.GUID == cv.GUID || cv.GUID == "" {
+		if ver.GUID == cv.GUID {
 			continue
 		}
 
@@ -56,6 +64,6 @@ func (cvs *ChannelsVersions) Check(bt BinaryType, fn VersionDiffMismatchFunc) {
 			continue
 		}
 
-		(*cvs)[c] = ver
+		cvs[c] = ver
 	}
 }

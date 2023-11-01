@@ -30,15 +30,15 @@ var Binaries = []BinaryType{
 
 var Channels = []string{
 	"LIVE",
-	"ZAvatarRelease",
-	"ZAvatarTeam",
-	"ZAvatarTeam2",
-	"ZFlag",
-	"ZCanaryApps",
-	"ZLive3",
-	"ZNext",
-	"ZStudioInt1",
-	"ZStudioInt2",
+//	"ZAvatarRelease",
+//	"ZAvatarTeam",
+//	"ZAvatarTeam2",
+//	"ZFlag",
+//	"ZCanaryApps",
+//	"ZLive3",
+//	"ZNext",
+//	"ZStudioInt1",
+//	"ZStudioInt2",
 }
 
 var commands = []api.CreateCommandData{{
@@ -93,14 +93,14 @@ func main() {
 		os.Exit(0)
 	}()
 
-	// first run
-	bcvs := make(BinariesChannelsVersions, 0)
+	bcvs := NewBinariesChannelsVersions()
 	bcvs.Check(func(vd *VersionDiff) error {
+		log.Printf("First run: %s %s", vd.New.GUID)
 		return nil
 	})
 
 	for {
-		time.Sleep(2 * time.Minute)
+		time.Sleep(2 * time.Millisecond)
 
 		bcvs.Check(func(vd *VersionDiff) error {
 			log.Printf("Sending version embed diff: %s %s", vd.Old.GUID, vd.New.GUID)
