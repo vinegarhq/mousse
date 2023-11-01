@@ -25,10 +25,7 @@ var (
 
 var Binaries = []BinaryType{
 	WindowsPlayer,
-	WindowsStudio,
 	WindowsStudio64,
-	MacPlayer,
-	MacStudio,
 }
 
 var Channels = []string{
