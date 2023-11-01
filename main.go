@@ -100,7 +100,7 @@ func main() {
 	})
 
 	for {
-		time.Sleep(2 * time.Millisecond)
+		time.Sleep(2 * time.Minute)
 
 		bcvs.Check(func(vd *VersionDiff) error {
 			log.Printf("Sending version embed diff: %s %s", vd.Old.GUID, vd.New.GUID)
