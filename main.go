@@ -30,15 +30,15 @@ var Binaries = []BinaryType{
 
 var Channels = []string{
 	"LIVE",
-//	"ZAvatarRelease",
-//	"ZAvatarTeam",
-//	"ZAvatarTeam2",
-//	"ZFlag",
-//	"ZCanaryApps",
-//	"ZLive3",
-//	"ZNext",
-//	"ZStudioInt1",
-//	"ZStudioInt2",
+	"ZAvatarRelease",
+	"ZAvatarTeam",
+	"ZAvatarTeam2",
+	"ZFlag",
+	"ZCanaryApps",
+	"ZLive3",
+	"ZNext",
+	"ZStudioInt1",
+	"ZStudioInt2",
 }
 
 var commands = []api.CreateCommandData{{
@@ -95,7 +95,7 @@ func main() {
 
 	bcvs := NewBinariesChannelsVersions()
 	bcvs.Check(func(vd *VersionDiff) error {
-		log.Printf("First run: %s %s", vd.New.GUID)
+		log.Printf("First run: %s", vd.New.GUID)
 		return nil
 	})
 
