@@ -1,19 +1,42 @@
 package main
 
 import (
+	"fmt"
 	"log"
+
+	"github.com/vinegarhq/vinegar/roblox"
+	"github.com/vinegarhq/vinegar/roblox/api"
 )
+
+var Binaries = []roblox.BinaryType{
+	roblox.Player,
+	roblox.Studio,
+}
+
+var Channels = []string{
+	"LIVE",
+	"ZFlag",
+}
+
+type Version struct {
+	GUID  string
+	Canon string
+}
 
 type (
 	ChannelsVersions         map[string]Version
-	BinariesChannelsVersions map[BinaryType]ChannelsVersions
+	BinariesChannelsVersions map[roblox.BinaryType]ChannelsVersions
 )
 
 type VersionDiff struct {
+	Binary  roblox.BinaryType
 	Channel string
-	Binary  BinaryType
 	Old     *Version
 	New     *Version
+}
+
+func (vd VersionDiff) String() string {
+	return fmt.Sprintf("%s: %s, %s -> %s", vd.Binary, vd.Channel, vd.Old.GUID, vd.New.GUID)
 }
 
 type VersionDiffMismatchFunc func(*VersionDiff) error
@@ -34,36 +57,41 @@ func (bcvs BinariesChannelsVersions) Check(fn VersionDiffMismatchFunc) {
 	}
 }
 
-func (cvs ChannelsVersions) Check(bt BinaryType, fn VersionDiffMismatchFunc) {
+func (cvs ChannelsVersions) Check(bt roblox.BinaryType, fn VersionDiffMismatchFunc) {
 	log.Printf("Checking for version changes for %s for all channels", bt)
 
 	for _, c := range Channels {
 		cv := cvs[c]
 
-		ver, err := bt.Version(c)
+		cvu, err := api.GetClientVersion(bt, c)
 		if err != nil {
 			log.Printf("%s: channel %s: %s", bt, c, err)
 
 			continue
 		}
 
-		if ver.GUID == cv.GUID {
+		if cvu.ClientVersionUpload == cvs[c].GUID {
 			continue
 		}
 
+		nv := Version{
+			GUID:  cvu.ClientVersionUpload,
+			Canon: cvu.Version,
+		}
+
 		err = fn(&VersionDiff{
-			Channel: c,
 			Binary:  bt,
-			New:     &ver,
+			Channel: c,
+			New:     &nv,
 			Old:     &cv,
 		})
+
+		cvs[c] = nv
 
 		if err != nil {
 			log.Println(err)
 
 			continue
 		}
-
-		cvs[c] = ver
 	}
 }

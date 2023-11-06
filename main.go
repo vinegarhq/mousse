@@ -1,8 +1,8 @@
 package main
 
 import (
-	"flag"
 	"context"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -12,8 +12,8 @@ import (
 
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/api/cmdroute"
-	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/diamondburned/arikawa/v3/utils/json/option"
 )
@@ -23,26 +23,8 @@ var (
 	channelID int64
 )
 
-var Binaries = []BinaryType{
-	WindowsPlayer,
-	WindowsStudio64,
-}
-
-var Channels = []string{
-	"LIVE",
-	"ZAvatarRelease",
-	"ZAvatarTeam",
-	"ZAvatarTeam2",
-	"ZFlag",
-	"ZCanaryApps",
-	"ZLive3",
-	"ZNext",
-	"ZStudioInt1",
-	"ZStudioInt2",
-}
-
 var commands = []api.CreateCommandData{{
-	Name: "status",
+	Name:        "status",
 	Description: "Display current tracking channels and binaries",
 }}
 
@@ -65,7 +47,7 @@ func main() {
 	s := state.New("Bot " + token)
 	s.AddInteractionHandler(r)
 	s.AddIntents(gateway.IntentGuilds)
-	
+
 	if err := cmdroute.OverwriteCommands(s, commands); err != nil {
 		log.Fatalln("cannot update commands:", err)
 	}
@@ -81,7 +63,7 @@ func main() {
 		}},
 	})
 	if err != nil {
-		log.Printf("cannot update activity:", err)
+		log.Println("cannot update activity:", err)
 	}
 
 	log.Println("Mousse is now running. Send TERM/INT to exit.")
@@ -95,7 +77,7 @@ func main() {
 
 	bcvs := NewBinariesChannelsVersions()
 	bcvs.Check(func(vd *VersionDiff) error {
-		log.Printf("First run: %s", vd.New.GUID)
+		log.Printf("First run %s: %s, %s", vd.Binary, vd.Channel, vd.New.GUID)
 		return nil
 	})
 
@@ -103,7 +85,7 @@ func main() {
 		time.Sleep(2 * time.Minute)
 
 		bcvs.Check(func(vd *VersionDiff) error {
-			log.Printf("Sending version embed diff: %s %s", vd.Old.GUID, vd.New.GUID)
+			log.Printf("Sending version embed diff: %s", vd)
 
 			if _, err := s.SendEmbeds(discord.ChannelID(channelID), *vd.Embed()); err != nil {
 				return err
@@ -120,8 +102,8 @@ func (vd *VersionDiff) Embed() *discord.Embed {
 	embed.Title = fmt.Sprintf("%s@%s", vd.Binary, vd.Channel)
 	embed.Description = fmt.Sprintf(
 		"```diff\n- %s (%s)\n+ %s (%s)\n```\n",
-		vd.Old.Real, vd.Old.GUID,
-		vd.New.Real, vd.New.GUID,
+		vd.Old.Canon, vd.Old.GUID,
+		vd.New.Canon, vd.New.GUID,
 	)
 
 	embed.Color = 0xAFC147
