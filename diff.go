@@ -15,7 +15,6 @@ var Binaries = []roblox.BinaryType{
 
 var Channels = []string{
 	"LIVE",
-	"ZFlag",
 }
 
 type Version struct {
