@@ -6,6 +6,10 @@ github.com/gorilla/websocket v1.4.2 h1:+/TMaTYc4QFitKJxsQ7Yye35DkWvkdLcvGKqM+x0U
 github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
+github.com/robloxapi/rbxdhist v0.6.0 h1:DH3hBwjgnJJyfuRQvJxkaX27V/EQP8/0KihW/9Ajo6Q=
+github.com/robloxapi/rbxdhist v0.6.0/go.mod h1:Dv8zmWSygz0Qc8SIRxasJ8wlAIchvyifEVHrG3qwNXI=
+github.com/robloxapi/rbxver v0.3.0 h1:ax3ndKtLiXNeYbGc56UEcPQYYMEr6heOfyRDfn+68lg=
+github.com/robloxapi/rbxver v0.3.0/go.mod h1:mpM7UdZ2YyLq4gSVtWToeRQLUHNBcOfRGRjINbOi5vM=
 github.com/vinegarhq/vinegar v1.5.4 h1:ovn29oT8k0S26+BpMKPRvQ4smNYtS027EAHdBuoaCEs=
 github.com/vinegarhq/vinegar v1.5.4/go.mod h1:PGWV3oXv+rVamwfMEGGJI4Ovcl0wPwMMu0lOUn94gAY=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=

@@ -10,23 +10,16 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/api/cmdroute"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
-	"github.com/diamondburned/arikawa/v3/utils/json/option"
 )
 
 var (
 	token     string
 	channelID int64
 )
-
-var commands = []api.CreateCommandData{{
-	Name:        "status",
-	Description: "Display current tracking channels and binaries",
-}}
 
 func init() {
 	flag.StringVar(&token, "token", "", "Discord Bot Token")
@@ -38,11 +31,8 @@ func main() {
 	log.Println("Starting Mousse")
 
 	r := cmdroute.NewRouter()
-	r.AddFunc("status", func(_ context.Context, _ cmdroute.CommandData) *api.InteractionResponseData {
-		return &api.InteractionResponseData{Content: option.NewNullableString(
-			fmt.Sprintf("Tracking binaries `%s` with channels `%s`", Binaries, Channels),
-		)}
-	})
+	r.AddFunc("status", cmdStatus)
+	r.AddFunc("query", cmdQuery)
 
 	s := state.New("Bot " + token)
 	s.AddInteractionHandler(r)
