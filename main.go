@@ -2,104 +2,152 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
+	"log/slog"
 	"os"
 	"os/signal"
-	"syscall"
 	"time"
 
+	"github.com/apprehensions/rbxbin"
+	cs "github.com/apprehensions/rbxweb/clientsettings"
+	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/api/cmdroute"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
+	"github.com/diamondburned/arikawa/v3/utils/json/option"
 )
-
-var (
-	token     string
-	channelID int64
-)
-
-func init() {
-	flag.StringVar(&token, "token", "", "Discord Bot Token")
-	flag.Int64Var(&channelID, "channel", 0, "Channel ID")
-}
 
 func main() {
+	t := flag.String("token", "", "Discord Bot Token")
+	c := flag.Int64("channel", 1143583777831010394, "Channel ID")
 	flag.Parse()
-	log.Println("Starting Mousse")
+
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+
+	errorResponse := func(err error) *api.InteractionResponseData {
+		return &api.InteractionResponseData{
+			Content:         option.NewNullableString("**Error:** " + err.Error()),
+			Flags:           discord.EphemeralMessage,
+			AllowedMentions: &api.AllowedMentions{ /* none */ },
+		}
+	}
 
 	r := cmdroute.NewRouter()
-	r.AddFunc("status", cmdStatus)
-	r.AddFunc("query", cmdQuery)
+	r.AddFunc("query", func(_ context.Context, d cmdroute.CommandData) *api.InteractionResponseData {
+		var o struct {
+			GUID string `discord:"guid"`
+		}
 
-	s := state.New("Bot " + token)
+		if err := d.Options.Unmarshal(&o); err != nil {
+			return errorResponse(err)
+		}
+
+		m, err := rbxbin.GetMirror()
+		if err != nil {
+			return errorResponse(err)
+		}
+
+		js, err := m.Jobs()
+		if err != nil {
+			return errorResponse(err)
+		}
+
+		var f *rbxbin.Job
+		for _, j := range js {
+			if j.GUID == o.GUID {
+				f = j
+			}
+		}
+		if f == nil {
+			return errorResponse(errors.New("GUID not found in deployment history"))
+		}
+
+		e := discord.NewEmbed()
+		e.Title = f.GUID
+		e.Fields = []discord.EmbedField{
+			{Name: "Build", Value: f.Build},
+			{Name: "Time", Value: f.Time.String()},
+			{Name: "Version", Value: fmt.Sprintf("`%s`", f.Version)},
+			{Name: "GitHash", Value: f.GitHash},
+		}
+
+		return &api.InteractionResponseData{Embeds: &[]discord.Embed{*e}}
+	})
+
+	s := state.New("Bot " + *t)
 	s.AddInteractionHandler(r)
 	s.AddIntents(gateway.IntentGuilds)
 
-	if err := cmdroute.OverwriteCommands(s, commands); err != nil {
+	if err := cmdroute.OverwriteCommands(s, []api.CreateCommandData{{
+		Name:        "query",
+		Description: "Retrieve general information about a GUID",
+		Options: discord.CommandOptions{&discord.StringOption{
+			OptionName:  "guid",
+			Description: "Deployment GUID to query",
+			Required:    true,
+		}},
+	}}); err != nil {
 		log.Fatalln("cannot update commands:", err)
 	}
 
-	if err := s.Open(context.Background()); err != nil {
-		log.Fatalln("cannot open:", err)
-	}
-
-	err := s.Gateway().Send(context.TODO(), &gateway.UpdatePresenceCommand{
-		Activities: []discord.Activity{{
-			Name: "Roblox's binaries",
-			Type: discord.WatchingActivity,
-		}},
+	s.AddHandler(func(*gateway.ReadyEvent) {
+		if err := s.Gateway().Send(ctx, &gateway.UpdatePresenceCommand{
+			Activities: []discord.Activity{{
+				Name: "Roblox's binaries",
+				Type: discord.WatchingActivity,
+			}},
+		}); err != nil {
+			log.Fatalln("cannot update activity:", err)
+		}
+		slog.Info("Connected!")
 	})
-	if err != nil {
-		log.Println("cannot update activity:", err)
+
+	k := make(map[cs.BinaryType]*cs.ClientVersion)
+	for _, b := range []cs.BinaryType{cs.WindowsPlayer, cs.WindowsStudio64} {
+		k[b] = nil
 	}
 
-	log.Println("Mousse is now running. Send TERM/INT to exit.")
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	go func() {
-		<-sc
-		s.Close()
-		os.Exit(0)
-	}()
+		for {
+			for b, v := range k {
+				cv, err := cs.GetClientVersion(b, "")
+				if err != nil {
+					slog.Error("Failed to fetch ClientVersion", "error", err)
+					continue
+				}
+				k[b] = cv
 
-	bcvs := NewBinariesChannelsVersions()
-	bcvs.Check(func(vd *VersionDiff) error {
-		log.Printf("First run %s: %s, %s", vd.Binary, vd.Channel, vd.New.GUID)
-		return nil
-	})
+				slog.Info("Fetched ClientVersion", "binary", b, "version", cv)
 
-	for {
-		time.Sleep(2 * time.Minute)
+				if v == nil || cv.GUID == v.GUID {
+					continue
+				}
 
-		bcvs.Check(func(vd *VersionDiff) error {
-			log.Printf("Sending version embed diff: %s", vd)
+				e := discord.NewEmbed()
+				e.Color = 0xCC241D
+				e.Title = fmt.Sprintf("%s@%s", b.Short(), "LIVE")
+				e.Description = fmt.Sprintf(
+					"```diff\n- %s (%s)\n+ %s (%s)\n```\n",
+					v.Version, v.GUID, cv.Version, cv.GUID,
+				)
 
-			if _, err := s.SendEmbeds(discord.ChannelID(channelID), *vd.Embed()); err != nil {
-				return err
+				slog.Info("Sending updated ClientVersion", "binary", b, "old_version", v, "new_version", cv)
+				if _, err := s.SendEmbeds(discord.ChannelID(*c), *e); err != nil {
+					slog.Error("Failed to send update", "error", err)
+					continue
+				}
 			}
 
-			return nil
-		})
+			time.Sleep(2 * time.Minute)
+		}
+	}()
+
+	if err := s.Connect(ctx); err != nil {
+		log.Fatalln("connection closed:", err)
 	}
-}
-
-func (vd *VersionDiff) Embed() *discord.Embed {
-	embed := discord.NewEmbed()
-
-	embed.Title = fmt.Sprintf("%s@%s", vd.Binary, vd.Channel)
-	embed.Description = fmt.Sprintf(
-		"```diff\n- %s (%s)\n+ %s (%s)\n```\n",
-		vd.Old.Canon, vd.Old.GUID,
-		vd.New.Canon, vd.New.GUID,
-	)
-
-	embed.Color = 0xAFC147
-	if vd.Channel == "LIVE" {
-		embed.Color = 0xCC241D
-	}
-
-	return embed
 }

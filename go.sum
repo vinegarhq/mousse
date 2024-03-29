@@ -1,3 +1,7 @@
+github.com/apprehensions/rbxbin v0.0.0-20240311165649-265a17b5c75d h1:t9RW/TRwjFEpR80iF/ckxcWbXDZJj0H3ByJ1CvI0fLw=
+github.com/apprehensions/rbxbin v0.0.0-20240311165649-265a17b5c75d/go.mod h1:Cl1jREWNBN76QnWjec71s6nqFa4bRbFlvsTynzRbmB4=
+github.com/apprehensions/rbxweb v0.0.0-20240309193157-ac2821c3a715 h1:mX1nybwzpK6lbSxUmIVhhtLtmGFQ5ABzSdIiNMBHvrM=
+github.com/apprehensions/rbxweb v0.0.0-20240309193157-ac2821c3a715/go.mod h1:F7WKRLrQxuRgfXxhwnlFJ059ZBMRxkXxvIhUxP4Qc5g=
 github.com/diamondburned/arikawa/v3 v3.3.3 h1:kwb63+jyCXfYip/pAooFwbdOB+08zhddkLjEK/JMGl8=
 github.com/diamondburned/arikawa/v3 v3.3.3/go.mod h1:+ifmDonP/JdBiUOzZmVReEjPTHDUSkyqqRRmjSf9NE8=
 github.com/gorilla/schema v1.2.0 h1:YufUaxZYCKGFuAq3c96BOhjgd5nmXiOY9NGzF247Tsc=
@@ -10,8 +14,6 @@ github.com/robloxapi/rbxdhist v0.6.0 h1:DH3hBwjgnJJyfuRQvJxkaX27V/EQP8/0KihW/9Aj
 github.com/robloxapi/rbxdhist v0.6.0/go.mod h1:Dv8zmWSygz0Qc8SIRxasJ8wlAIchvyifEVHrG3qwNXI=
 github.com/robloxapi/rbxver v0.3.0 h1:ax3ndKtLiXNeYbGc56UEcPQYYMEr6heOfyRDfn+68lg=
 github.com/robloxapi/rbxver v0.3.0/go.mod h1:mpM7UdZ2YyLq4gSVtWToeRQLUHNBcOfRGRjINbOi5vM=
-github.com/vinegarhq/vinegar v1.5.4 h1:ovn29oT8k0S26+BpMKPRvQ4smNYtS027EAHdBuoaCEs=
-github.com/vinegarhq/vinegar v1.5.4/go.mod h1:PGWV3oXv+rVamwfMEGGJI4Ovcl0wPwMMu0lOUn94gAY=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20210921155107-089bfa567519/go.mod h1:GvvjBRRGRdwPK5ydBHafDWAxML/pGHZbMvKqRZ5+Abc=
