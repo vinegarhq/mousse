@@ -3,7 +3,7 @@ module github.com/vinegarhq/mousse
 go 1.22.0
 
 require (
-	github.com/apprehensions/rbxbin v0.0.0-20240329184041-e89d3e26c824
+	github.com/apprehensions/rbxbin v0.0.0-20240331194256-67c91d012336
 	github.com/apprehensions/rbxweb v0.0.0-20240329184049-0bdedc184942
 	github.com/diamondburned/arikawa/v3 v3.3.5
 )

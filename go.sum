@@ -1,5 +1,7 @@
 github.com/apprehensions/rbxbin v0.0.0-20240329184041-e89d3e26c824 h1:UbSVj0ppSIsrTRGdGexyzugXCgeb3lSjCQwVmYw37gs=
 github.com/apprehensions/rbxbin v0.0.0-20240329184041-e89d3e26c824/go.mod h1:xQ/kfERoO1h8tCGp8z6EafN4TdEERb0sRO5fM/3bhKo=
+github.com/apprehensions/rbxbin v0.0.0-20240331194256-67c91d012336 h1:2VNHX03NOcf9fvYKpSWHeL7NsXENAXVC5rzfGdUXXdc=
+github.com/apprehensions/rbxbin v0.0.0-20240331194256-67c91d012336/go.mod h1:NzWWwwBoc512QDrjI01dXwvrZ7zgMfIUqmdRYrhbu0M=
 github.com/apprehensions/rbxweb v0.0.0-20240329184049-0bdedc184942 h1:pNRoIKlv329La+msdHmJSPYYf1y4hY4s5ou2mEQDHqU=
 github.com/apprehensions/rbxweb v0.0.0-20240329184049-0bdedc184942/go.mod h1:F7WKRLrQxuRgfXxhwnlFJ059ZBMRxkXxvIhUxP4Qc5g=
 github.com/diamondburned/arikawa/v3 v3.3.5 h1:Z6BwetBMzPxTBLY2Ixxic2kdJJe0JhNvVrdbJ0gRcWg=

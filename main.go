@@ -47,12 +47,7 @@ func main() {
 			return errorResponse(err)
 		}
 
-		m, err := rbxbin.GetMirror()
-		if err != nil {
-			return errorResponse(err)
-		}
-
-		js, err := m.Jobs()
+		js, err := rbxbin.DefaultMirror.GetJobs()
 		if err != nil {
 			return errorResponse(err)
 		}
